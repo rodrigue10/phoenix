@@ -38,6 +38,7 @@ import {
     cancelSubscription,
     createSubscription,
     getTransaction,
+    getTransactionUnsignedBytes,
     sendAmount,
     sendAmountToMultipleRecipients,
     sendAmountToSingleRecipient,
@@ -112,6 +113,7 @@ export function composeApi(settings: ApiSettings): Api {
         .withTransactionApi({
             broadcastTransaction,
             getTransaction,
+            getTransactionUnsignedBytes,
             sendAmount,
             sendAmountToSingleRecipient,
             sendAmountToMultipleRecipients,

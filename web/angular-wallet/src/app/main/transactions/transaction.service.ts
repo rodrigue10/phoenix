@@ -159,7 +159,7 @@ export class TransactionService {
 
   public async sendBurstUsingLedger(request: SendBurstLedgerRequest) {
 
-    const { amount, fee, recipientId, message, messageIsText, shouldEncryptMessage, publicKey, ledgerIndex} = request;
+    const { amount, fee, recipientId, message, messageIsText, shouldEncryptMessage, publicKey, ledgerIndex } = request;
 
     let attachment: Attachment;
     // todo: encrypted messages
@@ -175,9 +175,9 @@ export class TransactionService {
       publicKey,
       attachment);
 
-    console.log(unsignedTransactionBytes);
+    console.log('dylan', ledgerIndex, unsignedTransactionBytes);
 
-    this.appService.sendIpcMessage('ledger-sign-transaction', unsignedTransactionBytes);
+    this.appService.sendIpcMessage('ledger-sign-transaction', [ledgerIndex, unsignedTransactionBytes]);
     
   }
 

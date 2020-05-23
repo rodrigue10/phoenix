@@ -219,9 +219,9 @@ async function createWindow() {
     }
   });
 
-  ipcMain.on('ledger-sign-transaction', async (_context, unsignedTransactionBytes) => {
+  ipcMain.on('ledger-sign-transaction', async (_context, args) => {
     try {
-      const signedTransaction = await ledgerConnection.signTransaction(unsignedTransactionBytes);
+      const signedTransaction = await ledgerConnection.signTransaction(args[0], args[1]);
       console.log(signedTransaction);
       win.webContents.send('ledger-sign-transaction-response', signedTransaction);
     } catch (e) {

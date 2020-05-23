@@ -253,7 +253,6 @@ export class AccountService {
       const id = getAccountIdFromPublicKey(publicKey);
       account.account = id;
       account.accountRS = convertNumericIdToAddress(id);
-      // @ts-ignore
       account.ledgerIndex = ledgerIndex;
 
       const existingAccount = await this.storeService.findAccount(id);

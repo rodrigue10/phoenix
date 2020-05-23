@@ -32,6 +32,7 @@ export class Account {
     public unconfirmedAssetBalances: UnconfirmedAssetBalance[];
     public unconfirmedBalanceNQT: string;
     public confirmed: boolean;
+    public ledgerIndex: number;
 
     constructor(data: any = {}) {
         this.account = data.account || undefined;
@@ -59,5 +60,6 @@ export class Account {
         this.unconfirmedAssetBalances = data.unconfirmedAssetBalances || undefined;
         this.unconfirmedBalanceNQT = data.unconfirmedBalanceNQT || 0;
         this.confirmed = data.confirmed || false;
+        this.ledgerIndex = data.ledgerIndex || undefined;
     }
 }

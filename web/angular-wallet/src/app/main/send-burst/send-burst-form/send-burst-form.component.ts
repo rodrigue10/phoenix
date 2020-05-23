@@ -182,6 +182,7 @@ export class SendBurstFormComponent extends UnsubscribeOnDestroy implements OnIn
 
 
   async sendBurstUsingLedger(addressRS: string): Promise<void> {
+    console.log('gahh', this.account.ledgerIndex);
     try {
       this.isSending = true;
       await this.transactionService.sendBurstUsingLedger({
@@ -189,7 +190,6 @@ export class SendBurstFormComponent extends UnsubscribeOnDestroy implements OnIn
         fee: convertNumberToNQTString(parseFloat(this.fee)),
         recipientId: convertAddressToNumericId(addressRS),
         publicKey: this.account.keys.publicKey,
-        // @ts-ignore
         ledgerIndex: this.account.ledgerIndex,
         message: this.message,
         shouldEncryptMessage: this.encrypt,

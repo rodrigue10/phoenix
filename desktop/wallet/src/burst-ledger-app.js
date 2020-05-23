@@ -88,7 +88,6 @@ class BurstLedgerApp {
     return pubkeyOutStruct.fields.address;
   }
 
-
 	/**
    * @param index - the ledger index of the account to sign with
 	 * @param unsignedTransactionBytes - unsigned transaction bytes from server
@@ -102,7 +101,8 @@ class BurstLedgerApp {
 
     while (byteLen > pos) {
 
-      const delta = Math.min(250, byteLen - pos);
+      const delta = Math.round(Math.min(250, byteLen - pos));
+      console.log('delta ', delta, `pos `, pos);
 
       let P1 = pos == 0 ? P1_SIGN_INIT : P1_SIGN_CONTINUE;
       if (byteLen == pos + delta) P1 |= P1_SIGN_AUTHORIZE;
@@ -110,9 +110,11 @@ class BurstLedgerApp {
       const signInStruct = new Struct().chars('utx', delta, 'hex');
       signInStruct.allocate();
 
-
       const utx = unsignedTransactionBytes.slice();
-      signInStruct.fields.utx = utx.slice(pos, delta+pos);
+      // signInStruct.set('utx', utx.slice(pos, 
+      //   (delta*2 > unsignedTransactionBytes.length) ? 
+      // unsignedTransactionBytes.length-1 : delta * 2));
+      signInStruct.set('utx', utx);
       console.log(signInStruct.buffer());
 
       const response = await this._sendCommand(
@@ -133,13 +135,15 @@ class BurstLedgerApp {
       
     }
 
-    const finishStruct = new Struct().word32Ule('index');
+    // finish exchange
+
+    const finishStruct = new Struct().word8('zero1').word8('zero2').word8('index');
     finishStruct.allocate();
     finishStruct.fields.index = index;
 
     console.log(`finishStruct: `, finishStruct.buffer());
 
-    const response = await this._sendCommand(
+    const response2 = await this._sendCommand(
       Commands.INS_AUTH_SIGN_TXN,
       P1_SIGN_FINISH,
       0,
@@ -147,18 +151,18 @@ class BurstLedgerApp {
       TIMEOUT_CMD_USER_INTERACTION
     );
     
-    console.log(`finish buffer: `, response);
+    console.log(`finish buffer: `, response2);
 
-    const signOutStruct = new Struct()
+    const signOutStruct2 = new Struct()
       .word8('success')
       .chars('signature', 64, 'hex');
-    signOutStruct.setBuffer(response);
+    signOutStruct2.setBuffer(response2);
 
-    console.log(`signature: `, signOutStruct.fields.signature);
+    console.log(`signature: `, signOutStruct2.fields.signature);
 
     return {
-      success: signOutStruct.fields.success,
-      signature: signOutStruct.fields.signature,
+      success: signOutStruct2.fields.success,
+      signature: signOutStruct2.fields.signature,
       unsignedTransactionBytes: unsignedTransactionBytes
     };
 
@@ -166,7 +170,7 @@ class BurstLedgerApp {
 
   _createPubkeyInput(index) {
     let struct = new Struct();
-    struct = struct.word32Ule('index');
+    struct = struct.word8('zero1').word8('zero2').word8('index');
     struct.allocate();
     struct.fields.index = index;
     return struct;

@@ -108,7 +108,7 @@ export class SendBurstFormComponent extends UnsubscribeOnDestroy implements OnIn
       console.log(signature);
       try {
 
-        if (!verifySignature(convertStringToHexString(signature), convertStringToHexString(unsignedTransactionBytes), this.account.keys.publicKey)) {
+        if (!verifySignature(signature, unsignedTransactionBytes, this.account.keys.publicKey)) {
           throw new Error('The signed message could not be verified! Transaction not broadcasted!');
         }
 

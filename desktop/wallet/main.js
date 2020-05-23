@@ -5,6 +5,7 @@ const {download} = require('electron-dl');
 const {version, update} = require('./package.json');
 const UpdateService = require('./src/updateService');
 const logger = require('./src/logger');
+const Ledger = require('./src/ledger');
 
 let win;
 let downloadHandle;
@@ -13,7 +14,9 @@ const updateService = new UpdateService({
   currentVersion: version,
   ...update
 });
-const isDevelopment = process.env.development;
+// const isDevelopment = process.env.development; // todo: figure out why this doesnt work
+const isDevelopment = true;
+console.log(isDevelopment);
 
 const isLinux = () => process.platform === 'linux';
 const isMacOS = () => process.platform === 'darwin';
@@ -46,7 +49,7 @@ function getBrowserWindowConfig() {
     }
 }
 
-function createWindow() {
+async function createWindow() {
 
   const distPath = path.join(__dirname, './dist');
   win = new BrowserWindow(getBrowserWindowConfig());
@@ -192,6 +195,30 @@ function createWindow() {
 
   Menu.setApplicationMenu(Menu.buildFromTemplate(template));
 
+
+  const ledger = new Ledger(win);
+  let ledgerConnection = await ledger.setupConnection();
+  ledger.addListener(async (res) => {
+    console.log(res);
+    if (res) {
+
+      ledgerConnection = await ledger.setupConnection();
+      win.webContents.send('ledger-connected');
+    } else {
+      win.webContents.send('ledger-disconnected');
+    }
+  });
+
+  ipcMain.on('ledger-get-public-key', async (_context, index) => {
+    try {
+      const publicKey = await ledgerConnection.getPublicKey(index);
+      console.log(publicKey);
+      win.webContents.send('ledger-get-public-key-response', publicKey);
+    } catch (e) {
+      win.webContents.send('ledger-get-public-key-error', e);
+    }
+  });
+
 }
 
 function downloadUpdate($event, assetUrl) {
@@ -204,7 +231,6 @@ function downloadUpdate($event, assetUrl) {
       handle.once('done', () => {
         downloadHandle = null;
         win.webContents.send('new-version-download-finished');
-
       })
     },
   })

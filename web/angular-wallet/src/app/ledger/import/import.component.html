@@ -1,0 +1,72 @@
+<section class="login" id="login-particles" [fusePerfectScrollbar]="false" [fusePerfectScrollbarOptions]="{suppressScrollY:true}">
+    <div class="login-active__container">
+        <div class="signup">
+            <div class="signup__container">
+                <h1 class="signup__title">{{ 'ledger_import' | i18n }}</h1>
+
+                <div class="ledger-import-account-container">
+
+                    <mat-horizontal-stepper #stepper
+                                            linear
+                                            [linear]="true"
+                                            [selectedIndex]="this.ledgerImportService.getStep()"
+                                            labelPosition="bottom"
+                    >
+                    <mat-step>
+                        <ng-template matStepLabel>{{ 'generate' | i18n }}</ng-template>
+                        <div class="step-container">
+                            <h2>{{ 'ledger_select_index' | i18n }}</h2>
+
+                            <mat-form-field class="mt-24">
+                                <mat-select placeholder="{{ 'ledger_select_index' | i18n }}" [(value)]="selectedIndex">
+                                    <mat-option *ngFor="let index of indexes" [value]="index">
+                                        {{index}}
+                                    </mat-option>
+                                </mat-select>
+                            </mat-form-field>
+                            
+                            <div class="text-center navigation">
+                                <button class="btn-error" mat-raised-button routerLink="/login">{{ 'cancel' | i18n }}</button>
+                                <button class="btn-success" mat-raised-button (click)="next()">{{ 'next' | i18n }}</button>
+                            </div>
+
+                        </div>
+                    </mat-step>
+                    <mat-step
+                        [completed]="this.ledgerImportService.getPublicKey() !== undefined">
+                        <ng-template matStepLabel>{{ 'record' | i18n }}</ng-template>
+                        <div class="step-container" *ngIf="this.ledgerImportService.getPublicKey() !== undefined">
+                            <h2 class="title">
+                                {{'account_created' |i18n }}
+                            </h2>
+                            <table cellspacing="10" class="table">
+                                <tr>
+                                <td class="table__label">
+                                    ID:
+                                </td>
+                                <td class="table__text">
+                                    {{ getAccountIdFromPublicKey(this.ledgerImportService.getPublicKey()) }}
+                                </td>
+                                </tr>
+                                <tr>
+                                <td class="table__label">
+                                    {{ 'address' | i18n }}:
+                                </td>
+                                <td class="table__text">
+                                    {{ convertNumericIdToAddress(getAccountIdFromPublicKey(this.ledgerImportService.getPublicKey())) }}
+                                </td>
+                                </tr>
+                            </table>
+                            <div class="text-center navigation">
+                                <button class="btn-danger" mat-raised-button (click)="reset()">{{'back' | i18n}}</button>
+                                <button class="btn-success" mat-raised-button (click)="finish()">{{'finish' | i18n}}</button>
+                            </div>
+                        </div>
+                    </mat-step>
+                    </mat-horizontal-stepper>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+                

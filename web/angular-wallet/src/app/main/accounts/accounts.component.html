@@ -40,6 +40,10 @@
                   (click)="router.navigate(['/login/active'], { queryParams: { newUser: true } })">
             {{ 'account_create_new_short' | i18n }}
           </button>
+          <button [disabled]="!ledgerIsConnected" mat-button color="primary"
+                (click)="router.navigate(['/ledger/import'])">
+            {{ 'ledger_import' | i18n }}
+          </button>
         </ng-container>
       </div>
     </div>

@@ -40,7 +40,6 @@ import {FuseSharedModule} from '../../@fuse/shared.module';
 
     SetupModule,
     FuseSharedModule,
-
   ],
   declarations: [
     LoginComponent,

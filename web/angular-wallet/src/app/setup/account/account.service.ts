@@ -238,6 +238,36 @@ export class AccountService {
     });
   }
 
+  public createLedgerAccount(publicKey, ledgerIndex): Promise<Account> {
+    return new Promise(async (resolve, reject) => {
+      const account: Account = new Account();
+      account.type = 'ledger';
+      account.confirmed = false;
+
+      account.keys = {
+        publicKey: publicKey,
+        agreementPrivateKey: '', // stored in ledger
+        signPrivateKey: '' // stored in ledger
+      };
+
+      const id = getAccountIdFromPublicKey(publicKey);
+      account.account = id;
+      account.accountRS = convertNumericIdToAddress(id);
+      // @ts-ignore
+      account.ledgerIndex = ledgerIndex;
+
+      const existingAccount = await this.storeService.findAccount(id);
+      if (existingAccount === undefined) {
+        await this.selectAccount(account);
+        const savedAccount = await this.synchronizeAccount(account);
+        resolve(savedAccount);
+      } else {
+        reject('Burstcoin address already imported!');
+      }
+    });
+  }
+
+
   public removeAccount(account: Account): Promise<boolean> {
     return this.storeService.removeAccount(account).catch(error => error);
   }

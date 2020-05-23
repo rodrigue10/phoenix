@@ -57,6 +57,18 @@ interface SendBurstRequest {
   shouldEncryptMessage?: boolean;
 }
 
+interface SendBurstLedgerRequest {
+  amount: string;
+  deadline?: number;
+  fee: string;
+  keys: Keys;
+  message?: string;
+  ledgerIndex: number;
+  recipientId: string;
+  messageIsText: boolean;
+  shouldEncryptMessage?: boolean;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -102,6 +114,46 @@ export class TransactionService {
   }
 
   public async sendBurst(request: SendBurstRequest): Promise<TransactionId> {
+
+    const {pin, amount, fee, recipientId, message, messageIsText, shouldEncryptMessage, keys} = request;
+
+    let attachment: Attachment;
+    if (message && shouldEncryptMessage) {
+      const recipient = await this.accountService.getAccount(recipientId);
+      const agreementPrivateKey = decryptAES(keys.agreementPrivateKey, hashSHA256(pin));
+      let encryptedMessage: EncryptedMessage | EncryptedData;
+      if (messageIsText) {
+        encryptedMessage = encryptMessage(
+          message,
+          // @ts-ignore
+          recipient.publicKey,
+          agreementPrivateKey
+        );
+      } else {
+        encryptedMessage = encryptData(
+          new Uint8Array(convertHexStringToByteArray(message)),
+          // @ts-ignore
+          recipient.publicKey,
+          agreementPrivateKey
+        );
+      }
+
+      attachment = new AttachmentEncryptedMessage(encryptedMessage);
+    } else if (message) {
+      attachment = new AttachmentMessage({message, messageIsText});
+    }
+
+    return this.transactionApi.sendAmount(
+      amount,
+      fee,
+      recipientId,
+      keys.publicKey,
+      this.getSendersPrivateKey(pin, keys),
+      attachment);
+  }
+
+
+  public async sendBurstUsingLedger(request: SendBurstLedgerRequest): Promise<TransactionId> {
 
     const {pin, amount, fee, recipientId, message, messageIsText, shouldEncryptMessage, keys} = request;
 

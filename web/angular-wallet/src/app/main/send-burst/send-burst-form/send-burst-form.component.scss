@@ -33,6 +33,9 @@
 
   form {
     margin: 20px 0;
+    &.ledger .send-button-wrapper .send-button {
+      bottom: 0;
+    }
   }
 
   .no-balance {

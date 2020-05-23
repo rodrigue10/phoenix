@@ -8,9 +8,9 @@ Download the latest release from the [Releases page](https://github.com/burst-ap
 
 ## Running the latest release (Linux)
 ```console
-$ wget https://github.com/burst-apps-team/phoenix/releases/download/desktop-1.0.0-beta.14/linux-phoenix-burst-wallet.1.0.0-beta.14.tar.gz
-$ tar zxvf linux-phoenix-burst-wallet.1.0.0-beta.14.tar.gz
-$ cd linux-phoenix-burst-wallet.1.0.0-beta.14/
+$ wget https://github.com/burst-apps-team/phoenix/releases/download/desktop-1.0.0/linux-phoenix-burst-wallet.1.0.0.tar.gz
+$ tar zxvf linux-phoenix-burst-wallet.1.0.0.tar.gz
+$ cd linux-phoenix-burst-wallet.1.0.0/
 ```
 ```console
 $ sudo chown root:root ./chrome-sandbox
@@ -21,6 +21,7 @@ $ ./phoenix
 ## Build and Start Desktop Wallet
 
 You need installed globally angular-cli: `npm i @angular/cli -g`
+You also need installed globally lerna: `npm i lerna -g`
 
 Run the following commands to start the wallet as [electron](https://electronjs.org/) app
 

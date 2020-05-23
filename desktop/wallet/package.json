@@ -57,6 +57,7 @@
   },
   "dependencies": {
     "@burstjs/http": "^0.4.3",
+    "@ledgerhq/hw-transport-node-hid": "^5.15.0",
     "electron-dl": "^3.0.0",
     "get-ssl-certificate": "^2.3.3",
     "js-yaml": "^3.13.1",
@@ -64,6 +65,7 @@
     "prop-types": "^15.7.2",
     "semver": "^6.3.0",
     "snyk": "^1.316.1",
+    "struct": "0.0.12",
     "winston": "^3.2.1"
   },
   "snyk": true

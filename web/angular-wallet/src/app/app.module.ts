@@ -33,6 +33,7 @@ import {registerLocales} from './layout/components/i18n/locales';
 import {NgxElectronModule} from 'ngx-electron';
 import {NewVersionDialogComponent} from './components/new-version-dialog/new-version-dialog.component';
 import {MatProgressBarModule} from '@angular/material';
+import {LedgerModule} from './ledger/ledger.module';
 
 registerLocales();
 
@@ -78,7 +79,8 @@ const appRoutes: Routes = [
     MatTooltipModule,
     MatFormFieldModule,
     MatSelectModule,
-    MatProgressBarModule
+    MatProgressBarModule,
+    LedgerModule
   ],
   providers: [
     StoreService,

@@ -21,6 +21,7 @@ import {takeUntil} from 'rxjs/operators';
 import {UnsubscribeOnDestroy} from '../../../util/UnsubscribeOnDestroy';
 import { ActivatedRoute } from '@angular/router';
 import { burstAddressPattern } from 'app/util/burstAddressPattern';
+import { LedgerService } from 'app/ledger/ledger.service';
 
 
 interface QRData {
@@ -63,6 +64,7 @@ export class SendBurstFormComponent extends UnsubscribeOnDestroy implements OnIn
   public fee: string;
   isSending = false;
   language: string;
+  ledgerIsConnected = false;
 
   constructor(
     private warnDialog: MatDialog,
@@ -70,7 +72,8 @@ export class SendBurstFormComponent extends UnsubscribeOnDestroy implements OnIn
     private notifierService: NotifierService,
     private i18nService: I18nService,
     private storeService: StoreService,
-    private route: ActivatedRoute
+    private route: ActivatedRoute,
+    private ledgerService: LedgerService
   ) {
     super();
     this.storeService.settings
@@ -86,6 +89,14 @@ export class SendBurstFormComponent extends UnsubscribeOnDestroy implements OnIn
   ngOnInit(): void {
     setTimeout(() => {
       this.fee = convertNQTStringToNumber(this.fees['standard'].toString()).toString();
+    });
+    
+    this.ledgerService.connected
+    .pipe(
+      takeUntil(this.unsubscribeAll)
+    )
+    .subscribe((connected) => {
+      this.ledgerIsConnected = connected;
     });
   }
 
@@ -141,12 +152,13 @@ export class SendBurstFormComponent extends UnsubscribeOnDestroy implements OnIn
   async sendBurst(addressRS: string): Promise<void> {
     try {
       this.isSending = true;
-      await this.transactionService.sendBurst({
+      await this.transactionService.sendBurstUsingLedger({
         amount: convertNumberToNQTString(parseFloat(this.amount)),
         fee: convertNumberToNQTString(parseFloat(this.fee)),
         recipientId: convertAddressToNumericId(addressRS),
-        keys: this.account.keys,
-        pin: this.pin,
+        publicKey: this.account.keys,
+        // @ts-ignore
+        ledgerIndex: this.account.ledgerIndex,
         message: this.message,
         shouldEncryptMessage: this.encrypt,
         messageIsText: this.messageIsText,
@@ -176,7 +188,7 @@ export class SendBurstFormComponent extends UnsubscribeOnDestroy implements OnIn
   canSubmit(): boolean {
     return isNotEmpty(this.recipient.addressRaw) &&
       isNotEmpty(this.amount) &&
-      isNotEmpty(this.pin) &&
+      (this.account.type === 'ledger' || isNotEmpty(this.pin)) &&
       this.hasSufficientBalance();
   }
 

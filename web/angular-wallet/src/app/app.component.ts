@@ -20,6 +20,7 @@ import {AppService} from './app.service';
 import {UnsubscribeOnDestroy} from './util/UnsubscribeOnDestroy';
 import {takeUntil} from 'rxjs/operators';
 import { Router, DefaultUrlSerializer, UrlSegmentGroup, UrlSegment, PRIMARY_OUTLET } from '@angular/router';
+import { LedgerService } from './ledger/ledger.service';
 
 @Component({
   selector: 'app',
@@ -58,6 +59,7 @@ export class AppComponent extends UnsubscribeOnDestroy implements OnInit, OnDest
     private newVersionDialog: MatDialog,
     private router: Router,
     private applicationRef: ApplicationRef,
+    private ledgerService: LedgerService
   ) {
     super();
     if (this._platform.ANDROID || this._platform.IOS) {
@@ -90,6 +92,7 @@ export class AppComponent extends UnsubscribeOnDestroy implements OnInit, OnDest
     if (this.appService.isDesktop()) {
       this.initDesktopUpdater();
       this.initDeepLinkHandler();
+      this.initLedgerHandler();
     }
   }
 
@@ -114,6 +117,25 @@ export class AppComponent extends UnsubscribeOnDestroy implements OnInit, OnDest
       }, 1000);
     });
   }
+
+
+
+  private initLedgerHandler(): void {
+    this.appService.onIpcMessage('ledger-connected', () => {
+      this.ledgerService.setConnected(true);
+      this.notifierService.notify('success', this.i18nService.getTranslation('ledger_connected'));
+    });
+    this.appService.onIpcMessage('ledger-disconnected', () => {
+      this.ledgerService.setConnected(false);
+      this.notifierService.notify('success', this.i18nService.getTranslation('ledger_disconnected'));
+    });
+
+    this.appService.onIpcMessage('ledger', (res) => {
+      console.log(res);
+      this.notifierService.notify('success', this.i18nService.getTranslation('ledger_connected'));
+    });
+  }
+
 
   private initDesktopUpdater(): void {
     this.appService.onIpcMessage('new-version', (newVersion) => {

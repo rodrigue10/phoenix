@@ -12,6 +12,8 @@ import {convertNQTStringToNumber} from '@burstjs/util/out';
 import {takeUntil} from 'rxjs/operators';
 import {UnsubscribeOnDestroy} from '../../util/UnsubscribeOnDestroy';
 import {I18nService} from '../../layout/components/i18n/i18n.service';
+import { LedgerService } from 'app/ledger/ledger.service';
+
 
 @Component({
   selector: 'app-accounts',
@@ -25,6 +27,7 @@ export class AccountsComponent extends UnsubscribeOnDestroy implements OnInit, A
   public selectedAccount: Account;
   public selectedAccounts: object;
   public locale: string;
+  public ledgerIsConnected: boolean;
 
   @ViewChild(MatSort, { static: false }) sort: MatSort;
 
@@ -34,12 +37,14 @@ export class AccountsComponent extends UnsubscribeOnDestroy implements OnInit, A
     private notificationService: NotifierService,
     private i18nService: I18nService,
     private deleteDialog: MatDialog,
-    public router: Router
+    public router: Router,
+    private ledgerService: LedgerService
   ) {
     super();
   }
 
   public ngOnInit(): void {
+
     this.accounts = [];
     this.selectedAccounts = {};
     this.displayedColumns = ['type', 'account', 'accountRS', 'name', 'balanceNQT', 'description', 'delete'];
@@ -58,7 +63,7 @@ export class AccountsComponent extends UnsubscribeOnDestroy implements OnInit, A
         this.selectedAccount = this.accountService.currentAccount.value;
       });
 
-    this.storeService.settings
+      this.storeService.settings
       .pipe(
         takeUntil(this.unsubscribeAll)
       )
@@ -66,6 +71,15 @@ export class AccountsComponent extends UnsubscribeOnDestroy implements OnInit, A
         this.locale = language;
       });
 
+      this.ledgerService.connected
+      .pipe(
+        takeUntil(this.unsubscribeAll)
+      )
+      .subscribe((connected) => {
+        console.log(connected);
+        this.ledgerIsConnected = connected;
+      });
+      
   }
 
   public getSelectedAccounts(): Array<Account> {
@@ -136,4 +150,5 @@ export class AccountsComponent extends UnsubscribeOnDestroy implements OnInit, A
       this.notificationService.notify('error', `${activationFailed} ${e.message}`);
     }
   }
+
 }

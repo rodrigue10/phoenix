@@ -1,4 +1,4 @@
-<form (ngSubmit)="onSubmit($event);" #sendBurstForm="ngForm">
+<form [ngClass]="{'ledger': account.type === 'ledger'}" (ngSubmit)="onSubmit($event);" #sendBurstForm="ngForm">
 
   <burst-recipient-input [recipientValue]="recipient.addressRaw"
                          (recipientChange)="onRecipientChange($event)"
@@ -75,9 +75,14 @@
   </div>
 
   <div class="send-button-wrapper">
-    <mat-form-field class="message-text password-field" floatLabel="never" appearance="standard">
+    <mat-form-field *ngIf="account.type !== 'ledger'" class="message-text password-field" floatLabel="never" appearance="standard">
       <input type="password" matInput required placeholder="{{'enter_pin' | i18n}}" [(ngModel)]="pin" name="pin">
     </mat-form-field>
+
+    <div *ngIf="account.type === 'ledger'">
+      <p *ngIf="ledgerIsConnected">{{ 'ledger_connected' | i18n }}</p>
+      <p *ngIf="!ledgerIsConnected">{{ 'ledger_disconnected' | i18n }}</p>
+    </div>
 
     <button class="send-button" mat-icon-button type="submit" aria-label="Send message"
             [disabled]="!canSubmit()">
@@ -90,8 +95,7 @@
     </button>
   </div>
 
-
-  <strong>Total:&nbsp;</strong>
+  <strong>{{ 'total' | i18n }}:&nbsp;</strong>
   <span [class.no-balance]="!hasSufficientBalance()">{{ getTotal() | burstAmount }}</span> -
   <a (click)="advanced=!advanced"><em>{{ advanced ? "basic" : "advanced" | i18n }}</em></a>
 

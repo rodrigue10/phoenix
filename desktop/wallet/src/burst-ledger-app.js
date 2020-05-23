@@ -84,6 +84,43 @@ class BurstLedgerApp {
 
 
 
+	/**
+   * @param index - the ledger index of the account to sign with
+	 * @param unsignedTransactionBytes - unsigned transaction bytes from server
+	 * @return signed transaction bytes
+	 * @throws Exception
+	 */
+  async signTransaction(index, unsignedTransactionBytes) {
+
+
+    const signInStruct = new Struct().word32Ule('index');
+    signInStruct.allocate();
+    signInStruct.fields.index = index;
+
+    const response = await this._sendCommand(
+      Commands.INS_AUTH_SIGN_TXN,
+      0,
+      0,
+      signInStruct.buffer(),
+      TIMEOUT_CMD_PUBKEY
+    );
+
+    const signOutStruct = new Struct()
+      .chars('signature', 64)
+      .word8Sle('fragmentsRemaining');
+    signOutStruct.setBuffer(response);
+
+    console.log(signOutStruct.fields.signature);
+    return {
+      signature: signOutStruct.fields.signature,
+      fragmentsRemaining: signOutStruct.fields.fragmentsRemaining
+    };
+
+  }
+
+
+
+
 
 
 

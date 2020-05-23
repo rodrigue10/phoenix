@@ -11,7 +11,8 @@ import {
     sendAmount,
     sendAmountToMultipleRecipients,
     sendAmountToSingleRecipient,
-    sendSameAmountToMultipleRecipients
+    sendSameAmountToMultipleRecipients,
+    getTransactionUnsignedBytes
 } from '../factories/transaction';
 import { TransactionId } from '../../typings/transactionId';
 
@@ -375,6 +376,27 @@ describe('TransactionApi', () => {
                 expect(e.message).toContain('Unknown attachment type');
             }
         });
+
+
+        it('getTransactionUnsignedBytes', async () => {
+
+            httpMock = HttpMockBuilder.create()
+                // tslint:disable:max-line-length
+                .onPostReply(200, mockBroadcastResponse,
+                    'relPath?requestType=sendMoney&amountNQT=2000&publicKey=senderPublicKey&recipient=recipientId&feeNQT=1000&deadline=1440')
+                .build();
+
+            const service = createBurstService(httpMock, 'relPath');
+
+            const status = await getTransactionUnsignedBytes(service)(
+                '2000',
+                '1000',
+                'recipientId',
+                'senderPublicKey',
+            );
+            expect(status).toBe('unsignedHexMessage');
+        });
+
 
     });
 

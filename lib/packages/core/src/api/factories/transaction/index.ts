@@ -1,5 +1,6 @@
 export * from './broadcastTransaction';
 export * from './getTransaction';
+export * from './getTransactionUnsignedBytes';
 export * from './sendAmount';
 export * from './sendAmountToSingleRecipient';
 export * from './sendSameAmountToMultipleRecipients';

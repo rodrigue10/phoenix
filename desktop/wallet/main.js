@@ -219,6 +219,16 @@ async function createWindow() {
     }
   });
 
+  ipcMain.on('ledger-sign-transaction', async (_context, unsignedTransactionBytes) => {
+    try {
+      const signedTransaction = await ledgerConnection.signTransaction(unsignedTransactionBytes);
+      console.log(signedTransaction);
+      win.webContents.send('ledger-sign-transaction-response', signedTransaction);
+    } catch (e) {
+      win.webContents.send('ledger-sign-transaction-error', e);
+    }
+  });
+
 }
 
 function downloadUpdate($event, assetUrl) {

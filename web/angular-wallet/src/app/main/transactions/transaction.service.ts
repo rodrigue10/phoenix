@@ -14,6 +14,7 @@ import {AccountService} from 'app/setup/account/account.service';
 import {convertHexStringToByteArray} from '@burstjs/util';
 import {StoreService} from 'app/store/store.service';
 import {Settings} from 'app/settings';
+import { AppService } from 'app/app.service';
 
 interface SendMoneyMultiOutRequest {
   transaction: {
@@ -61,7 +62,7 @@ interface SendBurstLedgerRequest {
   amount: string;
   deadline?: number;
   fee: string;
-  keys: Keys;
+  publicKey: string;
   message?: string;
   ledgerIndex: number;
   recipientId: string;
@@ -77,7 +78,10 @@ export class TransactionService {
 
   public currentAccount: BehaviorSubject<any> = new BehaviorSubject(undefined);
 
-  constructor(apiService: ApiService, private accountService: AccountService, private storeService: StoreService) {
+  constructor(apiService: ApiService,
+    private accountService: AccountService,
+    private storeService: StoreService,
+    private appService: AppService) {
     this.transactionApi = apiService.api.transaction;
     this.storeService.settings.subscribe((settings: Settings) => {
       this.transactionApi = apiService.api.transaction;
@@ -153,43 +157,28 @@ export class TransactionService {
   }
 
 
-  public async sendBurstUsingLedger(request: SendBurstLedgerRequest): Promise<TransactionId> {
+  public async sendBurstUsingLedger(request: SendBurstLedgerRequest) {
 
-    const {pin, amount, fee, recipientId, message, messageIsText, shouldEncryptMessage, keys} = request;
+    const { amount, fee, recipientId, message, messageIsText, shouldEncryptMessage, publicKey, ledgerIndex} = request;
 
     let attachment: Attachment;
+    // todo: encrypted messages
     if (message && shouldEncryptMessage) {
-      const recipient = await this.accountService.getAccount(recipientId);
-      const agreementPrivateKey = decryptAES(keys.agreementPrivateKey, hashSHA256(pin));
-      let encryptedMessage: EncryptedMessage | EncryptedData;
-      if (messageIsText) {
-        encryptedMessage = encryptMessage(
-          message,
-          // @ts-ignore
-          recipient.publicKey,
-          agreementPrivateKey
-        );
-      } else {
-        encryptedMessage = encryptData(
-          new Uint8Array(convertHexStringToByteArray(message)),
-          // @ts-ignore
-          recipient.publicKey,
-          agreementPrivateKey
-        );
-      }
-
-      attachment = new AttachmentEncryptedMessage(encryptedMessage);
     } else if (message) {
       attachment = new AttachmentMessage({message, messageIsText});
     }
 
-    return this.transactionApi.sendAmount(
+    const unsignedTransactionBytes = await this.transactionApi.getTransactionUnsignedBytes(
       amount,
       fee,
       recipientId,
-      keys.publicKey,
-      this.getSendersPrivateKey(pin, keys),
+      publicKey,
       attachment);
+
+    console.log(unsignedTransactionBytes);
+
+    this.appService.sendIpcMessage('ledger-sign-transaction', unsignedTransactionBytes);
+    
   }
 
 }

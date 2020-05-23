@@ -5,6 +5,7 @@ import {Attachment} from '../attachment';
 import {SendAmountArgs} from '../args/sendAmountArgs';
 import {CancelSubscriptionArgs, CreateSubscriptionArgs} from '../args';
 import {Subscription} from '../subscription';
+import { UnsignedTransaction } from '../../internal';
 
 /**
  * Transaction API
@@ -52,10 +53,6 @@ export interface TransactionApi {
     /**
      * Sends a multi-out request to the blockchain with _arbitrary_ value for each recipient
      *
-     * @return The Transaction Id
-     */
-    /**
-     *
      * @param recipientAmounts A list of recipient Ids and their respective amounts to be sent
      * @param feePlanck The fee to be paid as Planck value
      * @param senderPublicKey The senders public key for sending an _unsigned_ message
@@ -97,6 +94,24 @@ export interface TransactionApi {
         senderPrivateKey: string,
         attachment?: Attachment,
     ) => Promise<TransactionId>;
+
+    /**
+     * Generates an unsigned transaction bytes string
+     *
+     * @param amountPlanck The amount to be sent as Planck value
+     * @param feePlanck The fee as Planck value
+     * @param recipientId The id of the recipient
+     * @param senderPublicKey The senders public key for sending an _unsigned_ message
+     * @param attachment An optional attachment
+     * @return The unsigned transaction bytes
+     */
+    getTransactionUnsignedBytes: (
+        amountPlanck: string,
+        feePlanck: string,
+        recipientId: string,
+        senderPublicKey: string,
+        attachment?: Attachment,
+    ) => Promise<UnsignedTransaction>;
 
     /**
      * Sends burst to another account/recipient

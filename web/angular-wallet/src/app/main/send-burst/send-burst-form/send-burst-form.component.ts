@@ -141,22 +141,54 @@ export class SendBurstFormComponent extends UnsubscribeOnDestroy implements OnIn
       const dialogRef = this.openWarningDialog([this.recipient]);
       dialogRef.afterClosed().subscribe(ok => {
         if (ok) {
-          this.sendBurst(this.recipient.addressRaw);
+          if (this.account.type === 'ledger') {
+            this.sendBurstUsingLedger(this.recipient.addressRaw);
+          } else {
+            this.sendBurst(this.recipient.addressRaw);
+          }
         }
       });
     } else {
-      this.sendBurst(this.recipient.addressRS);
+      if (this.account.type === 'ledger') {
+        this.sendBurstUsingLedger(this.recipient.addressRS);
+      } else {
+        this.sendBurst(this.recipient.addressRS);
+      }
     }
   }
 
   async sendBurst(addressRS: string): Promise<void> {
     try {
       this.isSending = true;
+      await this.transactionService.sendBurst({
+        amount: convertNumberToNQTString(parseFloat(this.amount)),
+        fee: convertNumberToNQTString(parseFloat(this.fee)),
+        recipientId: convertAddressToNumericId(addressRS),
+        keys: this.account.keys,
+        pin: this.pin,
+        message: this.message,
+        shouldEncryptMessage: this.encrypt,
+        messageIsText: this.messageIsText,
+        deadline: 1440
+      });
+      this.notifierService.notify('success', this.i18nService.getTranslation('success_send_money'));
+      this.sendBurstForm.resetForm();
+    } catch (e) {
+      this.notifierService.notify('error', this.i18nService.getTranslation('error_send_money'));
+    }
+    this.immutable = false;
+    this.isSending = false;
+  }
+
+
+  async sendBurstUsingLedger(addressRS: string): Promise<void> {
+    try {
+      this.isSending = true;
       await this.transactionService.sendBurstUsingLedger({
         amount: convertNumberToNQTString(parseFloat(this.amount)),
         fee: convertNumberToNQTString(parseFloat(this.fee)),
         recipientId: convertAddressToNumericId(addressRS),
-        publicKey: this.account.keys,
+        publicKey: this.account.keys.publicKey,
         // @ts-ignore
         ledgerIndex: this.account.ledgerIndex,
         message: this.message,
@@ -172,7 +204,6 @@ export class SendBurstFormComponent extends UnsubscribeOnDestroy implements OnIn
     this.immutable = false;
     this.isSending = false;
   }
-
 
   private openWarningDialog(recipients: Array<Recipient>): MatDialogRef<any> {
     return this.warnDialog.open(WarnSendDialogComponent, {

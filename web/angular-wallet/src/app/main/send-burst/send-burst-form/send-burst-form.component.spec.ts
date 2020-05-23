@@ -37,6 +37,7 @@ import { RouterTestingModule } from '@angular/router/testing';
 import { MatProgressBarModule } from '@angular/material';
 import { DomainService } from '../domain/domain.service';
 import {AppSharedModule} from '../../../shared/shared.module';
+import { LedgerService } from 'app/ledger/ledger.service';
 
 describe('SendBurstFormComponent', () => {
   let component: SendBurstFormComponent;
@@ -93,6 +94,14 @@ describe('SendBurstFormComponent', () => {
             return {
               sendMoney: () => Promise.resolve({broadcasted: true})
             };
+          }
+        },
+        {
+          provide: LedgerService,
+          useFactory: () => {
+            return {
+              connected: new BehaviorSubject(false)
+            }
           }
         },
         {

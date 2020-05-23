@@ -4,7 +4,8 @@ import {
   convertAddressToNumericId,
   convertNQTStringToNumber,
   convertNumberToNQTString,
-  sumNQTStringToNumber
+  sumNQTStringToNumber,
+  convertStringToHexString
 } from '@burstjs/util';
 import {NgForm} from '@angular/forms';
 import {TransactionService} from 'app/main/transactions/transaction.service';
@@ -22,6 +23,8 @@ import {UnsubscribeOnDestroy} from '../../../util/UnsubscribeOnDestroy';
 import { ActivatedRoute } from '@angular/router';
 import { burstAddressPattern } from 'app/util/burstAddressPattern';
 import { LedgerService } from 'app/ledger/ledger.service';
+import { AppService } from 'app/app.service';
+import { verifySignature, generateSignedTransactionBytes } from '@burstjs/crypto';
 
 
 interface QRData {
@@ -65,6 +68,7 @@ export class SendBurstFormComponent extends UnsubscribeOnDestroy implements OnIn
   isSending = false;
   language: string;
   ledgerIsConnected = false;
+  ledgerIsSigning = false;
 
   constructor(
     private warnDialog: MatDialog,
@@ -73,7 +77,8 @@ export class SendBurstFormComponent extends UnsubscribeOnDestroy implements OnIn
     private i18nService: I18nService,
     private storeService: StoreService,
     private route: ActivatedRoute,
-    private ledgerService: LedgerService
+    private ledgerService: LedgerService,
+    private appService: AppService
   ) {
     super();
     this.storeService.settings
@@ -98,6 +103,29 @@ export class SendBurstFormComponent extends UnsubscribeOnDestroy implements OnIn
     .subscribe((connected) => {
       this.ledgerIsConnected = connected;
     });
+
+    this.appService.onIpcMessage('ledger-sign-transaction-response', ({signature, unsignedTransactionBytes}) => {
+      console.log(signature);
+      try {
+
+        if (!verifySignature(convertStringToHexString(signature), convertStringToHexString(unsignedTransactionBytes), this.account.keys.publicKey)) {
+          throw new Error('The signed message could not be verified! Transaction not broadcasted!');
+        }
+
+        const signedMessage = generateSignedTransactionBytes(unsignedTransactionBytes, signature);
+        this.transactionService.broadcastTransaction(signedMessage);
+
+        this.notifierService.notify('success', this.i18nService.getTranslation('success_send_money'));
+        this.sendBurstForm.resetForm();
+      } catch (e) {
+        console.log(e);
+        this.notifierService.notify('error', e || this.i18nService.getTranslation('error_send_money'));
+      }
+
+      this.immutable = false;
+      this.isSending = false;
+      this.ledgerIsSigning = false;
+    })
   }
 
   ngAfterViewInit(): void {
@@ -182,9 +210,9 @@ export class SendBurstFormComponent extends UnsubscribeOnDestroy implements OnIn
 
 
   async sendBurstUsingLedger(addressRS: string): Promise<void> {
-    console.log('gahh', this.account.ledgerIndex);
     try {
       this.isSending = true;
+      this.ledgerIsSigning = true;
       await this.transactionService.sendBurstUsingLedger({
         amount: convertNumberToNQTString(parseFloat(this.amount)),
         fee: convertNumberToNQTString(parseFloat(this.fee)),
@@ -196,13 +224,12 @@ export class SendBurstFormComponent extends UnsubscribeOnDestroy implements OnIn
         messageIsText: this.messageIsText,
         deadline: 1440
       });
-      this.notifierService.notify('success', this.i18nService.getTranslation('success_send_money'));
-      this.sendBurstForm.resetForm();
     } catch (e) {
       this.notifierService.notify('error', this.i18nService.getTranslation('error_send_money'));
+      this.immutable = false;
+      this.isSending = false;
+      this.ledgerIsSigning = false;
     }
-    this.immutable = false;
-    this.isSending = false;
   }
 
   private openWarningDialog(recipients: Array<Recipient>): MatDialogRef<any> {
@@ -219,7 +246,8 @@ export class SendBurstFormComponent extends UnsubscribeOnDestroy implements OnIn
   canSubmit(): boolean {
     return isNotEmpty(this.recipient.addressRaw) &&
       isNotEmpty(this.amount) &&
-      (this.account.type === 'ledger' || isNotEmpty(this.pin)) &&
+      ((this.account.type === 'ledger' && this.ledgerIsConnected && !this.ledgerIsSigning) 
+        || isNotEmpty(this.pin)) &&
       this.hasSufficientBalance();
   }
 

@@ -79,9 +79,14 @@
       <input type="password" matInput required placeholder="{{'enter_pin' | i18n}}" [(ngModel)]="pin" name="pin">
     </mat-form-field>
 
-    <div *ngIf="account.type === 'ledger'">
+    <div *ngIf="account.type === 'ledger' && !ledgerIsSigning" class="ledger-status">
       <p *ngIf="ledgerIsConnected">{{ 'ledger_connected' | i18n }}</p>
       <p *ngIf="!ledgerIsConnected">{{ 'ledger_disconnected' | i18n }}</p>
+    </div>
+
+    <div *ngIf="account.type === 'ledger' && ledgerIsSigning" class="ledger-status">
+      <h2 *ngIf="ledgerIsConnected">{{ 'ledger_authorize_transaction' | i18n }}</h2>
+      <p *ngIf="ledgerIsConnected">{{ 'ledger_authorize_transaction_desc' | i18n }}</p>
     </div>
 
     <button class="send-button" mat-icon-button type="submit" aria-label="Send message"

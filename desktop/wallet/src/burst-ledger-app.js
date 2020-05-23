@@ -89,8 +89,6 @@ class BurstLedgerApp {
   }
 
 
-
-
 	/**
    * @param index - the ledger index of the account to sign with
 	 * @param unsignedTransactionBytes - unsigned transaction bytes from server
@@ -99,22 +97,23 @@ class BurstLedgerApp {
 	 */
   async signTransaction(index, unsignedTransactionBytes) {
 
+    const byteLen = unsignedTransactionBytes.length/2;
     let pos = 0;
-    console.log(index, unsignedTransactionBytes.length);
-    while (unsignedTransactionBytes.length > pos) {
-      const delta = Math.min(250, unsignedTransactionBytes.length - pos);
-      console.log('delta: ', delta);
-      let P1 = pos == 0 ? P1_SIGN_INIT : P1_SIGN_CONTINUE;
-      if (unsignedTransactionBytes.length == pos + delta) P1 |= P1_SIGN_AUTHORIZE;
 
-      const signInStruct = new Struct()
-        .chars('utx', delta);
+    while (byteLen > pos) {
+
+      const delta = Math.min(250, byteLen - pos);
+
+      let P1 = pos == 0 ? P1_SIGN_INIT : P1_SIGN_CONTINUE;
+      if (byteLen == pos + delta) P1 |= P1_SIGN_AUTHORIZE;
+
+      const signInStruct = new Struct().chars('utx', delta, 'hex');
       signInStruct.allocate();
 
+
       const utx = unsignedTransactionBytes.slice();
-      console.log(`utx length: `, utx.length);
       signInStruct.fields.utx = utx.slice(pos, delta+pos);
-      console.log(signInStruct.fields.utx);
+      console.log(signInStruct.buffer());
 
       const response = await this._sendCommand(
         Commands.INS_AUTH_SIGN_TXN,
@@ -124,18 +123,11 @@ class BurstLedgerApp {
         TIMEOUT_CMD_PUBKEY
       );
 
-      console.log(`while loop response: `, response);
-
-      const signOutStruct = new Struct()
-      .word8('res1')
-      .word8('res2')
-      .word8('res3');
+      console.log(`signOutBuffer: `, response);
+      const signOutStruct = new Struct().word8('res1').word8('res2').word8('res3');
       signOutStruct.setBuffer(response);
-      console.log(signOutStruct.fields.res1, signOutStruct.fields.res2, signOutStruct.fields.res3);
 
-      // if (signOutStruct.fields.signature.length < 1 || 
-      //    (signOutStruct.fields.signature[0] != 0 && signOutStruct.fields.signature[0] != 15))
-      // return null;
+      if (signOutStruct.fields.res1 != 0 && signOutStruct.fields.res1 != 15) return null;
 
       pos += delta;
       
@@ -145,32 +137,40 @@ class BurstLedgerApp {
     finishStruct.allocate();
     finishStruct.fields.index = index;
 
+    console.log(`finishStruct: `, finishStruct.buffer());
+
     const response = await this._sendCommand(
       Commands.INS_AUTH_SIGN_TXN,
       P1_SIGN_FINISH,
       0,
       finishStruct.buffer(),
-      TIMEOUT_CMD_PUBKEY
+      TIMEOUT_CMD_USER_INTERACTION
     );
-
-    console.log(`finishing response: `, response);
+    
+    console.log(`finish buffer: `, response);
 
     const signOutStruct = new Struct()
-      .word8('finalized')
+      .word8('success')
       .chars('signature', 64, 'hex');
     signOutStruct.setBuffer(response);
 
-    console.log(signOutStruct.fields.success, signOutStruct.fields.signature);
+    console.log(`signature: `, signOutStruct.fields.signature);
+
     return {
+      success: signOutStruct.fields.success,
       signature: signOutStruct.fields.signature,
-      fragmentsRemaining: signOutStruct.fields.fragmentsRemaining
+      unsignedTransactionBytes: unsignedTransactionBytes
     };
 
   }
 
-
-
-
+  _createPubkeyInput(index) {
+    let struct = new Struct();
+    struct = struct.word32Ule('index');
+    struct.allocate();
+    struct.fields.index = index;
+    return struct;
+  }
 
   async _reset(partial = false) {
     await this._sendCommand(

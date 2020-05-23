@@ -221,9 +221,9 @@ async function createWindow() {
 
   ipcMain.on('ledger-sign-transaction', async (_context, args) => {
     try {
-      const signedTransaction = await ledgerConnection.signTransaction(args[0], args[1]);
-      console.log(signedTransaction);
-      win.webContents.send('ledger-sign-transaction-response', signedTransaction);
+      const signedTransactionResponse = await ledgerConnection.signTransaction(args[0], args[1]);
+      console.log(signedTransactionResponse);
+      win.webContents.send('ledger-sign-transaction-response', signedTransactionResponse);
     } catch (e) {
       win.webContents.send('ledger-sign-transaction-error', e);
     }

@@ -181,4 +181,8 @@ export class TransactionService {
     
   }
 
+  public broadcastTransaction(signature: string) {
+    return this.transactionApi.broadcastTransaction(signature);
+  }
+
 }

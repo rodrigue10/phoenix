@@ -23,7 +23,6 @@ import {UnsubscribeOnDestroy} from '../../../util/UnsubscribeOnDestroy';
 import { ActivatedRoute } from '@angular/router';
 import { burstAddressPattern } from 'app/util/burstAddressPattern';
 import { LedgerService } from 'app/ledger/ledger.service';
-import { AppService } from 'app/app.service';
 import { verifySignature, generateSignedTransactionBytes } from '@burstjs/crypto';
 
 
@@ -77,8 +76,7 @@ export class SendBurstFormComponent extends UnsubscribeOnDestroy implements OnIn
     private i18nService: I18nService,
     private storeService: StoreService,
     private route: ActivatedRoute,
-    private ledgerService: LedgerService,
-    private appService: AppService
+    private ledgerService: LedgerService
   ) {
     super();
     this.storeService.settings
@@ -104,28 +102,34 @@ export class SendBurstFormComponent extends UnsubscribeOnDestroy implements OnIn
       this.ledgerIsConnected = connected;
     });
 
-    this.appService.onIpcMessage('ledger-sign-transaction-response', ({signature, unsignedTransactionBytes}) => {
-      console.log(signature);
-      try {
+    this.ledgerService.latestTransactionSignature
+    .pipe(
+      takeUntil(this.unsubscribeAll)
+    )
+    .subscribe(({signature, unsignedTransactionBytes}) => {
+      console.log('here', signature);
+      if (this.isSending && this.ledgerIsSigning) {
+        try {
 
-        if (!verifySignature(signature, unsignedTransactionBytes, this.account.keys.publicKey)) {
-          throw new Error('The signed message could not be verified! Transaction not broadcasted!');
+          if (!verifySignature(signature, unsignedTransactionBytes, this.account.keys.publicKey)) {
+            throw new Error('The signed message could not be verified! Transaction not broadcasted!');
+          }
+  
+          const signedMessage = generateSignedTransactionBytes(unsignedTransactionBytes, signature);
+          this.transactionService.broadcastTransaction(signedMessage);
+  
+          this.notifierService.notify('success', this.i18nService.getTranslation('success_send_money'));
+          this.sendBurstForm.resetForm();
+        } catch (e) {
+          console.log(e);
+          this.notifierService.notify('error', e || this.i18nService.getTranslation('error_send_money'));
         }
-
-        const signedMessage = generateSignedTransactionBytes(unsignedTransactionBytes, signature);
-        this.transactionService.broadcastTransaction(signedMessage);
-
-        this.notifierService.notify('success', this.i18nService.getTranslation('success_send_money'));
-        this.sendBurstForm.resetForm();
-      } catch (e) {
-        console.log(e);
-        this.notifierService.notify('error', e || this.i18nService.getTranslation('error_send_money'));
+  
+        this.immutable = false;
+        this.isSending = false;
+        this.ledgerIsSigning = false;
       }
-
-      this.immutable = false;
-      this.isSending = false;
-      this.ledgerIsSigning = false;
-    })
+    });
   }
 
   ngAfterViewInit(): void {

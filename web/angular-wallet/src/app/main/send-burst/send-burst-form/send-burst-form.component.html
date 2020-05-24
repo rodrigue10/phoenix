@@ -85,7 +85,7 @@
     </div>
 
     <div *ngIf="account.type === 'ledger' && ledgerIsSigning" class="ledger-status">
-      <h2 *ngIf="ledgerIsConnected">{{ 'ledger_authorize_transaction' | i18n }}</h2>
+      <h3 *ngIf="ledgerIsConnected">{{ 'ledger_authorize_transaction' | i18n }}</h3>
       <p *ngIf="ledgerIsConnected">{{ 'ledger_authorize_transaction_desc' | i18n }}</p>
     </div>
 

@@ -28,7 +28,7 @@
                 (click)="deleteSelectedAccounts()">Delete Selected
         </button>
         <ng-container *ngIf="!getSelectedAccounts().length">
-          <button mat-button [matMenuTriggerFor]="createAccountMenu">{{ 'create_account' | i18n }}</button>
+          <button color="primary" mat-button [matMenuTriggerFor]="createAccountMenu">{{ 'add_account' | i18n }}</button>
           <mat-menu #createAccountMenu="matMenu">
             <button mat-menu-item (click)="router.navigate(['/login/passive'])">
               {{ 'account_watch_short' | i18n }}

@@ -28,22 +28,26 @@
                 (click)="deleteSelectedAccounts()">Delete Selected
         </button>
         <ng-container *ngIf="!getSelectedAccounts().length">
-          <button mat-button color="primary"
-                  (click)="router.navigate(['/login/passive'])">
-            {{ 'account_watch_short' | i18n }}
-          </button>
-          <button mat-button color="primary"
-                  (click)="router.navigate(['/login/active'])">
-            {{ 'account_import_short' | i18n }}
-          </button>
-          <button mat-button color="primary"
-                  (click)="router.navigate(['/login/active'], { queryParams: { newUser: true } })">
-            {{ 'account_create_new_short' | i18n }}
-          </button>
-          <button [disabled]="!ledgerIsConnected" mat-button color="primary"
-                (click)="router.navigate(['/ledger/import'])">
-            {{ 'ledger_import' | i18n }}
-          </button>
+          <button mat-button [matMenuTriggerFor]="createAccountMenu">{{ 'create_account' | i18n }}</button>
+          <mat-menu #createAccountMenu="matMenu">
+            <button mat-menu-item (click)="router.navigate(['/login/passive'])">
+              {{ 'account_watch_short' | i18n }}
+            </button>
+            <button mat-menu-item (click)="router.navigate(['/login/active'])">
+              {{ 'account_import_short' | i18n }}
+            </button>
+            <button 
+              mat-menu-item
+              (click)="router.navigate(['/login/active'], { queryParams: { newUser: true } })">
+              {{ 'account_create_new_short' | i18n }}
+            </button>
+            <button 
+              mat-menu-item 
+              [disabled]="!ledgerIsConnected"
+              (click)="router.navigate(['/ledger/import'])">
+              {{ 'ledger_import' | i18n }}
+            </button>
+          </mat-menu>
         </ng-container>
       </div>
     </div>

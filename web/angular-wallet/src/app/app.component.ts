@@ -118,24 +118,9 @@ export class AppComponent extends UnsubscribeOnDestroy implements OnInit, OnDest
     });
   }
 
-
-
   private initLedgerHandler(): void {
-    this.appService.onIpcMessage('ledger-connected', () => {
-      this.ledgerService.setConnected(true);
-      this.notifierService.notify('success', this.i18nService.getTranslation('ledger_connected'));
-    });
-    this.appService.onIpcMessage('ledger-disconnected', () => {
-      this.ledgerService.setConnected(false);
-      this.notifierService.notify('success', this.i18nService.getTranslation('ledger_disconnected'));
-    });
-
-    this.appService.onIpcMessage('ledger', (res) => {
-      console.log(res);
-      this.notifierService.notify('success', this.i18nService.getTranslation('ledger_connected'));
-    });
+    this.ledgerService.init();
   }
-
 
   private initDesktopUpdater(): void {
     this.appService.onIpcMessage('new-version', (newVersion) => {

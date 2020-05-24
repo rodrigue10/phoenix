@@ -5,7 +5,7 @@ const {download} = require('electron-dl');
 const {version, update} = require('./package.json');
 const UpdateService = require('./src/updateService');
 const logger = require('./src/logger');
-const Ledger = require('./src/ledger');
+const Ledger = require('./src/ledger/ledger');
 
 let win;
 let downloadHandle;
@@ -195,39 +195,8 @@ async function createWindow() {
 
   Menu.setApplicationMenu(Menu.buildFromTemplate(template));
 
-
-  const ledger = new Ledger(win);
-  let ledgerConnection = await ledger.setupConnection();
-  ledger.addListener(async (res) => {
-    console.log(res);
-    if (res) {
-
-      ledgerConnection = await ledger.setupConnection();
-      win.webContents.send('ledger-connected');
-    } else {
-      win.webContents.send('ledger-disconnected');
-    }
-  });
-
-  ipcMain.on('ledger-get-public-key', async (_context, index) => {
-    try {
-      const publicKey = await ledgerConnection.getPublicKey(index);
-      console.log(publicKey);
-      win.webContents.send('ledger-get-public-key-response', publicKey);
-    } catch (e) {
-      win.webContents.send('ledger-get-public-key-error', e);
-    }
-  });
-
-  ipcMain.on('ledger-sign-transaction', async (_context, args) => {
-    try {
-      const signedTransactionResponse = await ledgerConnection.signTransaction(args[0], args[1]);
-      console.log(signedTransactionResponse);
-      win.webContents.send('ledger-sign-transaction-response', signedTransactionResponse);
-    } catch (e) {
-      win.webContents.send('ledger-sign-transaction-error', e);
-    }
-  });
+  // Setup the ledger connection/listeners
+  new Ledger(win);
 
 }
 

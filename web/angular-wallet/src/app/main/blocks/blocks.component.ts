@@ -49,7 +49,7 @@ export class BlocksComponent implements OnInit {
         .map((block, i) => {
           if (blocks[i + 1]) {
             const timeBetween = this.convertTimestamp(block.timestamp).getTime() - this.convertTimestamp(blocks[i + 1].timestamp).getTime();
-            return new Date(timeBetween).getMinutes();
+            return new Date(timeBetween).getTime()/1000;
           }
         })
         .filter((time) => typeof time !== 'undefined')
@@ -59,7 +59,7 @@ export class BlocksComponent implements OnInit {
         chartType: 'line',
         datasets: [
           {
-            label: 'Block Time (mins)',
+            label: 'Block Time (seconds)',
             data: chartData,
             fill: 'start'
           }
@@ -120,9 +120,9 @@ export class BlocksComponent implements OnInit {
             yAxes: [
               {
                 ticks: {
-                  min: Math.min(...chartData),
+                  min: 0,
                   max: Math.max(...chartData),
-                  stepSize: 2,
+                  stepSize: 60,
                   fontColor: '#ffffff'
                 }
               }

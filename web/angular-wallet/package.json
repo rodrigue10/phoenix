@@ -121,7 +121,7 @@
     },
     "husky": {
         "hooks": {
-            "pre-push": "../../pre-push.sh"
+            "pre-push": "../../pre-push.sh --no-confirm"
         }
     }
 }
